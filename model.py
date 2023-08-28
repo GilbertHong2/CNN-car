@@ -281,3 +281,14 @@ conf, predicted = torch.max(output.data, 1)
 # get the class name of the prediction
 display(Image.open(dataset_dir+"test/Mercedes-Benz C-Class Sedan 2012/01977.jpg"))
 print(classes[predicted.item()], "confidence: ", conf.item())
+
+# Save and Load the Models
+PATH_an = 'car_model_an.pth'
+torch.save(model_ft_an.state_dict(), PATH_an)
+
+PATH_rn = 'car_model_an.pth'
+torch.save(model_ft_rn.state_dict(), PATH_rn)
+
+model_loaded_an = torch.load(PATH_an)
+model_loaded_rn = torch.load(PATH_rn)
+
