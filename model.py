@@ -180,7 +180,7 @@ axarr[1, 0].set_title("Test acc, AlexNet")
 
 # Evaluate the model on single images
 
-# tie the class indices to their names
+# tie the class indices to their names 
 
 def find_classes(dir):
     classes = os.listdir(dir)
