@@ -160,7 +160,7 @@ model_ft_an = model_ft_an.to(device)
 
 
 criterion = nn.CrossEntropyLoss()
-optimizer = optim.SGD(model_ft.parameters(), lr=0.01, momentum=0.9)
+optimizer = optim.SGD(model_ft_an.parameters(), lr=0.01, momentum=0.9)
 
 lrscheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='max', patience=3, threshold = 0.9)
 
@@ -203,7 +203,7 @@ image = loader(image).float()
 image = torch.autograd.Variable(image, requires_grad=True)
 image = image.unsqueeze(0)
 image = image.cuda()
-output = model_ft(image)
+output = model_ft_an(image)
 conf, predicted = torch.max(output.data, 1)
 
 # get the class name of the prediction
@@ -247,7 +247,7 @@ lrscheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='max', patien
 
 # model training
 
-model_ft_rn, training_losses, training_accs, test_accs = train_model(model_ft, criterion, optimizer, lrscheduler, n_epochs=20)
+model_ft_rn, training_losses, training_accs, test_accs = train_model(model_ft_rn, criterion, optimizer, lrscheduler, n_epochs=20)
 
 # plot the stats
 
@@ -275,7 +275,7 @@ image = loader(image).float()
 image = torch.autograd.Variable(image, requires_grad=True)
 image = image.unsqueeze(0)
 image = image.cuda()
-output = model_ft(image)
+output = model_ft_rn(image)
 conf, predicted = torch.max(output.data, 1)
 
 # get the class name of the prediction
