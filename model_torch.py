@@ -1,4 +1,4 @@
-# Here begins the code for the neural network model
+# Here begins the code for the neural network model using pytorch
 
 # Load packages
 import matplotlib.pyplot as plt
