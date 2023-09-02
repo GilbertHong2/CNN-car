@@ -48,7 +48,7 @@ def init_model(train_dir, val_dir, batch_size=32, model_name='resnet50', num_cla
         base_model = inception_v3.InceptionV3(include_top=False, weights='imagenet', input_shape = (img_size, img_size,3))
         preprocess_input = inception_v3.preprocess_input
     elif model_name == 'resnet50':
-        base_model = resnet50.ResNet50(include_top=False, weights='imagenet', input_shape = (img_size, img_size,3))
+        base_model = ResNet50(include_top=False, weights='imagenet', input_shape = (img_size, img_size,3))
         preprocess_input = resnet50.preprocess_input
 
     # initalize training image data generator
@@ -123,7 +123,7 @@ def init_model(train_dir, val_dir, batch_size=32, model_name='resnet50', num_cla
 
 
 ## Train model
-# This part defines the function to train the model. 
+# Defines the function to train the model. 
 # The hyperparameters can be modified.
 
 def train(model, train_generator, validation_generator, num_class=196, model_name='resnet50', batch_size=32, epochs=30, suffix='laioffer'):
@@ -156,4 +156,65 @@ def train(model, train_generator, validation_generator, num_class=196, model_nam
         validation_data = validation_generator,
         validation_steps=validationSteps)
     return history
+
+## Fine-tune model
+# Defines the function to fine-tune the pre-trained model on our datset. 
+# Can fine tune less layers if the data size is small
+
+def fine_tune(model, train_generator, validation_generator, num_class=196, model_name='resnet50', batch_size=32, epochs=50, suffix='laioffer'):
+    """
+    fine tune the model
+    parms:
+        model: initialized model
+        train_generator: training data generator
+        validation_generator: validation data generator
+        args: parsed command line arguments
+    return:
+    """
+    # for specific architectures, define number of trainable layers
+    if model_name == 'vgg19':
+        trainable_layers = 6
+    elif model_name == 'inception_v3':
+        trainable_layers = 35
+    elif model_name == 'resnet50':
+        trainable_layers = 12
+
+    for layer in model.layers[:-1*trainable_layers]:
+        layer.trainable = False
+
+    for layer in model.layers[-1*trainable_layers:]:
+        layer.trainable = True
+
+    finetune_model_name = 'finetuned_{}_{}_{}_{}.h5'.format(model_name, num_class, epochs, suffix)
+    tensorboard = TensorBoard(log_dir="logs/{}_finetune_{}".format(model_name, time()), histogram_freq=0, write_graph=True)
+    checkpoint = ModelCheckpoint(finetune_model_name, monitor='val_acc', verbose=1, save_best_only=True, save_weights_only=False, mode='auto', period=1)
+    earlystopping = EarlyStopping(monitor='acc', patience=5)
+    callbacks_list = [checkpoint, tensorboard, earlystopping]
+
+    model.compile(loss="categorical_crossentropy", optimizer=optimizers.SGD(lr=0.0001, momentum=0.9),metrics=["accuracy"])
+
+    stepsPerEpoch = train_generator.samples / batch_size
+    validationSteps= validation_generator.samples / batch_size
+    history = model.fit_generator(
+        train_generator,
+        steps_per_epoch=stepsPerEpoch,
+        epochs=epochs,
+        callbacks = callbacks_list,
+        validation_data = validation_generator,
+        validation_steps=validationSteps)
+    return history
+
+# Use the functions with data
+
+## Train/fine-tune model
+
+model_to_use = 'resnet50'
+# initialize model
+model, train_generator, validation_generator = init_model(train_dir='car_dataset/train', model_name=model_to_use, val_dir='car_dataset/test', num_class=196)
+# pretrain model
+train(model, train_generator, validation_generator, num_class=196, model_name=model_to_use, epochs=15)
+# fine-tune model
+history = fine_tune(model, train_generator, validation_generator, num_class=196, model_name=model_to_use, epochs=30)
+
+
 
