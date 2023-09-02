@@ -121,3 +121,39 @@ def init_model(train_dir, val_dir, batch_size=32, model_name='resnet50', num_cla
 
     return model, train_generator, validation_generator
 
+
+## Train model
+# This part defines the function to train the model. 
+# The hyperparameters can be modified.
+
+def train(model, train_generator, validation_generator, num_class=196, model_name='resnet50', batch_size=32, epochs=30, suffix='laioffer'):
+    """
+    train the model
+    parms:
+        model: initialized model
+        train_generator: training data generator
+        validation_generator: validation data generator
+        args: parsed command line arguments
+    return:
+    """
+    # define number of steps/iterators per epoch
+    stepsPerEpoch = train_generator.samples / batch_size
+    validationSteps= validation_generator.samples / batch_size
+
+    # save the snapshot of the model to local drive
+    pretrain_model_name = 'pretrained_{}_{}_{}_{}.h5'.format(model_name, num_class, epochs, suffix)
+    # visualize the training process
+    tensorboard = TensorBoard(log_dir="logs/{}_pretrain_{}".format(model_name, time()), histogram_freq=0, write_graph=True)
+    checkpoint = ModelCheckpoint(pretrain_model_name, monitor='val_acc', verbose=1, save_best_only=True, save_weights_only=False, mode='auto', period=1)
+    earlystopping = EarlyStopping(monitor='acc', patience=5)
+    callbacks_list = [checkpoint, tensorboard, earlystopping]
+
+    history = model.fit_generator(
+        train_generator,
+        steps_per_epoch=stepsPerEpoch,
+        epochs=epochs,
+        callbacks = callbacks_list,
+        validation_data = validation_generator,
+        validation_steps=validationSteps)
+    return history
+
